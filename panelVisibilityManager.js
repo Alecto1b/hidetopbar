@@ -25,10 +25,10 @@ import Clutter from 'gi://Clutter';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as Layout from 'resource:///org/gnome/shell/ui/layout.js';
 import * as Config from 'resource:///org/gnome/shell/misc/config.js';
-import * as PointerWatcher from 'resource:///org/gnome/shell/ui/pointerWatcher.js';
 const [major] = Config.PACKAGE_VERSION.split('.');
 const shellVersion = Number.parseInt(major);
 
+import * as PointerWatcher from './pointerWatcher.js';
 import * as Convenience from './convenience.js';
 import * as Intellihide from './intellihide.js';
 import * as DesktopIconsIntegration from './desktopIconsIntegration.js';
@@ -77,7 +77,7 @@ export class PanelVisibilityManager {
             }
         ).bind(this);
 
-        this._pointerWatcher = PointerWatcher.getPointerWatcher();
+        this._pointerWatcher = PointerWatcher.createPointerWatcher();
         this._pointerListener = null;
 
         // Load settings
@@ -106,7 +106,7 @@ export class PanelVisibilityManager {
         if(trigger == "mouse-left" && this._isHovering(...mouse)) return;
 
         if(this._pointerListener) {
-            this._pointerWatcher._removeWatch(this._pointerListener);
+            this._pointerListener.remove();
             this._pointerListener = null;
         }
 
@@ -303,7 +303,7 @@ export class PanelVisibilityManager {
 
     _disablePressureBarrier() {
         if(this._pointerListener) {
-            this._pointerWatcher._removeWatch(this._pointerListener);
+            this._pointerListener.remove();
             this._pointerListener = null;
         }
 
@@ -567,6 +567,8 @@ export class PanelVisibilityManager {
         this._signalsHandler.destroy();
         Main.wm.removeKeybinding("shortcut-keybind");
         this._disablePressureBarrier();
+        this._pointerWatcher.destroy();
+        this._pointerWatcher = null;
         if (_searchEntryBin) {
           _searchEntryBin.style = null;
         }
